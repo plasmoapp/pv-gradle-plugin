@@ -1,5 +1,5 @@
 # su.plo.voice.plugin.relocate-kotlin
-<img alt="version" src="https://img.shields.io/badge/dynamic/xml?label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.plasmoverse.com/snapshots/su/plo/voice/pv-gradle-plugin/maven-metadata.xml">
+<img alt="version" src="https://img.shields.io/badge/dynamic/xml?label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.plasmoverse.com/snapshots/su/plo/voice/plugin/pv-gradle-plugin/maven-metadata.xml">
 
 Gradle plugin for relocating Kotlin, so you can use Kotlin bundled with [Plasmo Voice](https://github.com/plasmoapp/plasmo-voice). 
 
@@ -20,7 +20,7 @@ plugins {
 ```
 
 # su.plo.voice.plugin.entrypoints
-<img alt="version" src="https://img.shields.io/badge/dynamic/xml?label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.plasmoverse.com/snapshots/su/plo/voice/pv-gradle-plugin/maven-metadata.xml">
+<img alt="version" src="https://img.shields.io/badge/dynamic/xml?label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.plasmoverse.com/snapshots/su/plo/voice/plugin/pv-gradle-plugin/maven-metadata.xml">
 
 Gradle plugin for generating [Plasmo Voice](https://github.com/plasmoapp/plasmo-voice) universal add-ons entrypoints.
 
