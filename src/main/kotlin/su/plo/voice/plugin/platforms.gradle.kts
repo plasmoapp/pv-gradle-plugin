@@ -29,4 +29,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://maven.minecraftforge.net")
     maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven("https://repo.plo.su")
+    maven("https://repo.plasmoverse.com/releases")
+    maven("https://repo.plasmoverse.com/snapshots")
 }
