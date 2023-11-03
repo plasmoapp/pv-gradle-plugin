@@ -31,6 +31,9 @@ repositories {
     gradlePluginPortal()
     maven("https://jitpack.io")
     maven("https://maven.minecraftforge.net")
+    maven("https://repo.plo.su")
+    maven("https://repo.plasmoverse.com/releases")
+    maven("https://repo.plasmoverse.com/snapshots")
 }
 
 publishing {
