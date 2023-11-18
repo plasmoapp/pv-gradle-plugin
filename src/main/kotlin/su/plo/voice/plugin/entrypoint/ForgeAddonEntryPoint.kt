@@ -48,7 +48,7 @@ object ForgeAddonEntryPoint : AddonEntryPoint() {
             addonDependencies.add(HashMap<String, Any>().also { dependency ->
                 dependency["modId"] = "plasmovoice"
                 dependency["mandatory"] = true
-                dependency["versionRange"] = "[2.0.0,)"
+                dependency["versionRange"] = "[2.1.0,)"
                 dependency["ordering"] = "AFTER"
             })
 

@@ -42,7 +42,7 @@ object FabricAddonEntryPoint : AddonEntryPoint() {
             })
         })
         fabricJson.add("depends", JsonObject().also { depends ->
-            depends.addProperty("plasmovoice", "*")
+            depends.addProperty("plasmovoice", ">=2.1.0-0")
             addon.dependencies.filter { !it.isOptional }.forEach { dependency ->
                 depends.addProperty(dependency.id, "*")
             }
