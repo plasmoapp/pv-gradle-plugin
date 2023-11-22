@@ -41,6 +41,7 @@ pluginManagement {
 `build.gradle.kts`
 ```kotlin
 plugins {
+    kotlin("jvm") version("1.8.22") // you also need to add kotlin plugin
     id("su.plo.voice.plugin.entrypoints") version "${version}"
 }
 ```
