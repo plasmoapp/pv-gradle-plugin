@@ -8,7 +8,7 @@ snakeyaml = "2.0"
 toml4j = "0.7.2"
 forge = "6+"
 
-plasmovoice = "2.0.3"
+plasmovoice = "2.1.0-SNAPSHOT"
 
 [libraries]
 kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
