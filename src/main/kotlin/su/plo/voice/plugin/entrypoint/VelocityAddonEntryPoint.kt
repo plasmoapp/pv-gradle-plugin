@@ -86,8 +86,8 @@ object VelocityAddonEntryPoint : AddonEntryPoint() {
         }
 
         // Add onLoad method
-        val loadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onProxyInitialization", "(Lcom.velocitypowered.api.event.proxy.ProxyInitializeEvent;)V", null, null)
-        loadMethod.visitAnnotation("Lcom.velocitypowered.api.event.Subscribe;", true)
+        val loadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onProxyInitialization", "(Lcom/velocitypowered/api/event/proxy/ProxyInitializeEvent;)V", null, null)
+        loadMethod.visitAnnotation("Lcom/velocitypowered/api/event/Subscribe;", true)
         loadMethod.visitCodeThenEnd {
             generateProxyAddonsLoaders(loadMethod, fullClassName, addons)
         }
