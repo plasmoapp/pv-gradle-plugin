@@ -6,7 +6,7 @@ javaparser = "3.25.1"
 kotlinparser = "0.1.0"
 snakeyaml = "2.0"
 toml4j = "0.7.2"
-forge = "6+"
+asm = "9.6"
 
 plasmovoice = "2.1.0-SNAPSHOT"
 
@@ -17,4 +17,5 @@ javaparser = { module = "com.github.javaparser:javaparser-core", version.ref = "
 kotlinparser = { module = "com.github.kotlinx.ast:grammar-kotlin-parser-antlr-kotlin", version.ref = "kotlinparser" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 toml4j = { module = "com.moandjiezana.toml:toml4j", version.ref = "toml4j" }
-forge = { module = "net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin", version.ref = "forge" }
+
+asm = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }

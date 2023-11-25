@@ -2,8 +2,11 @@ package su.plo.voice.plugin.entrypoint
 
 import com.github.javaparser.ast.CompilationUnit
 import org.gradle.api.Project
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
 import org.yaml.snakeyaml.Yaml
 import su.plo.voice.plugin.AddonMeta
+import su.plo.voice.plugin.extension.visitCodeThenEnd
 import java.io.File
 
 object BungeeCordAddonEntryPoint : AddonEntryPoint() {
@@ -46,31 +49,51 @@ object BungeeCordAddonEntryPoint : AddonEntryPoint() {
     }
 
     override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
-        val compilationUnit = CompilationUnit()
-            .addImport("net.md_5.bungee.api.plugin.Plugin")
-            .addImport("su.plo.voice.api.proxy.PlasmoVoiceProxy")
-            .setPackageDeclaration(packageName)
+        // Define class
+        val className = "BungeeCordEntryPoint"
+        val fullClassName = "${packageName.replace(".", "/")}/$className"
+        val classOwner = "net/md_5/bungee/api/plugin/Plugin"
 
-        val entryPointClass = compilationUnit
-            .addClass("BungeeCordEntryPoint")
-            .setPublic(true)
-            .addExtendedType("Plugin")
+        val cw = ClassWriter(ClassWriter.COMPUTE_FRAMES)
 
-        val methodBlock = generateProxyAddonsLoaders(entryPointClass, addons)
+        cw.visit(
+            Opcodes.V1_8,
+            Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL,
+            fullClassName,
+            null,
+            classOwner,
+            null
+        )
 
-        entryPointClass.addMethod("onLoad")
-            .setPublic(true)
-            .addAnnotation(Override::class.java)
-            .setBody(methodBlock)
+        // Add constructor
+        val constructorMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null)
+        constructorMethod.visitCodeThenEnd {
+            generateConstructor(cw, constructorMethod, fullClassName, classOwner, addons)
+        }
+
+        // Add onLoad method
+        val loadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onLoad", "()V", null, null)
+        loadMethod.visitCodeThenEnd {
+            generateProxyAddonsLoaders(loadMethod, fullClassName, addons)
+        }
+
+        // Add onDisable method
+        val unloadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onDisable", "()V", null, null)
+        unloadMethod.visitCodeThenEnd {
+            generateProxyAddonsUnloaders(unloadMethod, fullClassName, addons)
+        }
+
+        // Generate bytecode
+        cw.visitEnd()
 
         val packageDir = File(
             project.buildDir,
-            "generated/sources/plasmovoice/java/${packageName.replace(".", "/")}"
+            "classes/java/main/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
             packageDir,
-            "${entryPointClass.name}.java"
-        ).writeText(compilationUnit.toString())
+            "${className}.class"
+        ).writeBytes(cw.toByteArray())
     }
 }

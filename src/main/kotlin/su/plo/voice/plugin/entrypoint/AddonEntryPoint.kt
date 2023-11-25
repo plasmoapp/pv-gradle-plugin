@@ -1,115 +1,144 @@
 package su.plo.voice.plugin.entrypoint
 
-import com.github.javaparser.ast.Modifier
-import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
-import com.github.javaparser.ast.expr.*
-import com.github.javaparser.ast.stmt.BlockStmt
-import com.github.javaparser.ast.type.ClassOrInterfaceType
 import org.gradle.api.Project
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
+import su.plo.voice.api.addon.AddonLoaderScope
+import su.plo.voice.api.addon.AddonsLoader
 import su.plo.voice.plugin.AddonMeta
 import java.io.File
 
 abstract class AddonEntryPoint {
 
     protected fun generateServerAddonsLoaders(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        addons: List<AddonMeta>,
-        block: BlockStmt = BlockStmt()
-    ): BlockStmt {
-        addons.filter { it.loaderScope.isServer }.forEach { addon ->
-            generateLoadMethod(entryPointClass, block, "PlasmoVoiceServer", addon)
-        }
-
-        return block
-    }
+        method: MethodVisitor,
+        className: String,
+        addons: List<AddonMeta>
+    ) = generateLoadMethods(method, className, "su/plo/voice/api/server/PlasmoVoiceServer", addons.filter { it.loaderScope.isServer })
 
     protected fun generateServerAddonsUnloaders(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        addons: List<AddonMeta>,
-        block: BlockStmt = BlockStmt()
-    ): BlockStmt {
-        addons.filter { it.loaderScope.isServer }.forEach { addon ->
-            generateUnloadMethod(entryPointClass, block, "PlasmoVoiceServer", addon)
-        }
-
-        return block
-    }
+        method: MethodVisitor,
+        className: String,
+        addons: List<AddonMeta>
+    ) = generateUnloadMethods(method, className, "su/plo/voice/api/server/PlasmoVoiceServer", addons.filter { it.loaderScope.isServer })
 
     protected fun generateClientAddonsLoaders(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        addons: List<AddonMeta>,
-        block: BlockStmt = BlockStmt()
-    ): BlockStmt {
-        addons.filter { it.loaderScope.isClient }.forEach { addon ->
-            generateLoadMethod(entryPointClass, block, "PlasmoVoiceClient", addon)
-        }
-
-        return block
-    }
+        method: MethodVisitor,
+        className: String,
+        addons: List<AddonMeta>
+    ) = generateLoadMethods(method, className, "su/plo/voice/api/client/PlasmoVoiceClient", addons.filter { it.loaderScope.isClient })
 
     protected fun generateProxyAddonsLoaders(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        addons: List<AddonMeta>,
-        block: BlockStmt = BlockStmt()
-    ): BlockStmt {
-        addons.filter { it.loaderScope.isProxy }.forEach { addon ->
-            generateLoadMethod(entryPointClass, block, "PlasmoVoiceProxy", addon)
+        method: MethodVisitor,
+        className: String,
+        addons: List<AddonMeta>
+    ) = generateLoadMethods(method, className, "su/plo/voice/api/proxy/PlasmoVoiceProxy", addons.filter { it.loaderScope.isProxy })
+
+    protected fun generateProxyAddonsUnloaders(
+        method: MethodVisitor,
+        className: String,
+        addons: List<AddonMeta>
+    ) = generateUnloadMethods(method, className, "su/plo/voice/api/proxy/PlasmoVoiceProxy", addons.filter { it.loaderScope.isProxy })
+
+    protected fun generateConstructor(
+        cv: ClassVisitor,
+        method: MethodVisitor,
+        className: String,
+        classOwner: String,
+        addons: List<AddonMeta>
+    ) {
+        val addonIds = addons.map {
+            val addonId = it.id.replace("-[a-z]".toRegex()) { matchResult ->
+                matchResult.value.substring(1).capitalize()
+            }
+            val addonEntryPoint = it.entryPoint.replace(".", "/")
+
+            Pair(addonId, addonEntryPoint)
         }
 
-        return block
+        // Define field
+        addonIds.forEach { (addonId, addonEntryPoint) ->
+            val fv = cv.visitField(Opcodes.ACC_PRIVATE + Opcodes.ACC_FINAL, addonId, "L$addonEntryPoint;", null, null)
+            fv.visitEnd()
+        }
+
+        // Generate default constructor
+        method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
+
+        method.visitMethodInsn(Opcodes.INVOKESPECIAL, classOwner, "<init>", "()V", false)
+
+        // Initialize the field
+        addonIds.forEach { (addonId, addonEntryPoint) ->
+            method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
+
+            method.visitTypeInsn(Opcodes.NEW, addonEntryPoint)
+            method.visitInsn(Opcodes.DUP)
+            method.visitMethodInsn(Opcodes.INVOKESPECIAL, addonEntryPoint, "<init>", "()V", false)
+            method.visitFieldInsn(
+                Opcodes.PUTFIELD,
+                className,
+                addonId,
+                "L$addonEntryPoint;"
+            )
+        }
     }
 
-    private fun generateLoadMethod(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        block: BlockStmt,
+    private fun generateLoadMethods(
+        method: MethodVisitor,
+        className: String,
         addonLoaderClass: String,
-        addon: AddonMeta
-    ) = generateLoaderMethod(entryPointClass, block, addonLoaderClass, addon, "load")
+        addons: List<AddonMeta>
+    ) = addons.forEach {
+        generateLoaderMethod(method, className, addonLoaderClass, it, "load")
+    }
 
-    private fun generateUnloadMethod(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        block: BlockStmt,
+    private fun generateUnloadMethods(
+        method: MethodVisitor,
+        className: String,
         addonLoaderClass: String,
-        addon: AddonMeta
-    ) = generateLoaderMethod(entryPointClass, block, addonLoaderClass, addon, "unload")
+        addons: List<AddonMeta>
+    ) =  addons.forEach {
+        generateLoaderMethod(method, className, addonLoaderClass, it, "unload")
+    }
 
     private fun generateLoaderMethod(
-        entryPointClass: ClassOrInterfaceDeclaration,
-        block: BlockStmt,
+        method: MethodVisitor,
+        className: String,
+
         addonLoaderClass: String,
         addon: AddonMeta,
-        method: String
+        methodName: String,
     ) {
         val addonId = addon.id.replace("-[a-z]".toRegex()) { matchResult ->
             matchResult.value.substring(1).capitalize()
         }
+        val addonEntryPoint = addon.entryPoint.replace(".", "/")
 
-        if (!entryPointClass.fields.any { it.getVariable(0).name.identifier == addonId }) {
-            entryPointClass.addFieldWithInitializer(
-                addon.entryPoint,
-                addonId,
-                ObjectCreationExpr(
-                    null,
-                    ClassOrInterfaceType(null, addon.entryPoint),
-                    NodeList()
-                ),
-                Modifier.Keyword.PRIVATE
-            )
-        }
+        // Generate method body
+        method.visitMethodInsn(
+            Opcodes.INVOKESTATIC,
+            addonLoaderClass,
+            "getAddonsLoader",
+            "()Lsu/plo/voice/api/addon/AddonsLoader;",
+            true
+        )
+        method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
 
-        val plasmoVoiceServer = NameExpr(addonLoaderClass)
-        val getAddonManagerInstance = MethodCallExpr(plasmoVoiceServer, "getAddonsLoader")
-        val addonManagerLoad = MethodCallExpr(getAddonManagerInstance, method)
-
-        addonManagerLoad.addArgument(
-            FieldAccessExpr(
-                ThisExpr(),
-                addonId
-            )
+        method.visitFieldInsn(
+            Opcodes.GETFIELD,
+            className,
+            addonId,
+            "L$addonEntryPoint;"
         )
 
-        block.addStatement(addonManagerLoad)
+        method.visitMethodInsn(
+            Opcodes.INVOKEINTERFACE,
+            "su/plo/voice/api/addon/AddonsLoader",
+            methodName,
+            "(Ljava/lang/Object;)V",
+            true
+        )
     }
 
     abstract fun generate(project: Project, addons: List<AddonMeta>)

@@ -6,7 +6,10 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.gradle.api.Project
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
 import su.plo.voice.plugin.AddonMeta
+import su.plo.voice.plugin.extension.visitCodeThenEnd
 import java.io.File
 
 object FabricAddonEntryPoint : AddonEntryPoint() {
@@ -69,41 +72,46 @@ object FabricAddonEntryPoint : AddonEntryPoint() {
     }
 
     override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
-        val compilationUnit = CompilationUnit()
-            .addImport("net.fabricmc.api.ModInitializer")
-            .setPackageDeclaration(packageName)
+        // Define class
+        val className = "FabricEntryPoint"
+        val fullClassName = "${packageName.replace(".", "/")}/$className"
+        val classOwner = "java/lang/Object"
 
-        if (addons.any { it.loaderScope.isServer }) {
-            compilationUnit.addImport("su.plo.voice.api.server.PlasmoVoiceServer")
+        val cw = ClassWriter(ClassWriter.COMPUTE_FRAMES)
+
+        cw.visit(
+            Opcodes.V1_8,
+            Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL,
+            fullClassName,
+            null,
+            null,
+            arrayOf("net/fabricmc/api/ModInitializer")
+        )
+
+        // Add constructor
+        val constructorMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null)
+        constructorMethod.visitCodeThenEnd {
+            generateConstructor(cw, constructorMethod, fullClassName, classOwner, addons)
         }
 
-        if (addons.any { it.loaderScope.isClient }) {
-            compilationUnit.addImport("su.plo.voice.api.client.PlasmoVoiceClient")
+        // Add onLoad method
+        val loadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onInitialize", "()V", null, null)
+        loadMethod.visitCodeThenEnd {
+            generateServerAddonsLoaders(loadMethod, fullClassName, addons)
+            generateClientAddonsLoaders(loadMethod, fullClassName, addons)
         }
 
-        val entryPointClass = compilationUnit
-            .addClass("FabricEntryPoint")
-            .setPublic(true)
-            .addImplementedType("ModInitializer")
-
-        val methodBlock = BlockStmt().also { block ->
-            generateServerAddonsLoaders(entryPointClass, addons, block)
-            generateClientAddonsLoaders(entryPointClass, addons, block)
-        }
-
-        entryPointClass.addMethod("onInitialize")
-            .setPublic(true)
-            .addAnnotation(Override::class.java)
-            .setBody(methodBlock)
+        // Generate bytecode
+        cw.visitEnd()
 
         val packageDir = File(
             project.buildDir,
-            "generated/sources/plasmovoice/java/${packageName.replace(".", "/")}"
+            "classes/java/main/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
             packageDir,
-            "${entryPointClass.name}.java"
-        ).writeText(compilationUnit.toString())
+            "${className}.class"
+        ).writeBytes(cw.toByteArray())
     }
 }

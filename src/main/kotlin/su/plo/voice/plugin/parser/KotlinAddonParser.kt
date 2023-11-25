@@ -102,20 +102,17 @@ object KotlinAddonParser : AddonParser {
                         .filter { it.description == "LineStrText" || it.description == "BooleanLiteral" }
                         .forEach { terminal ->
                             if (terminal.description == "LineStrText") {
-                                println(terminal)
-                                println(terminal.text)
                                 lastDependencyName?.let {
                                     dependencies.add(AddonDependency(
                                         it,
-                                        lastDependencyOptional ?: false,
-                                        false
+                                        lastDependencyOptional ?: false
                                     ))
                                 }
                                 lastDependencyName = terminal.text
                             } else {
                                 lastDependencyName?.let {
                                     lastDependencyOptional?.let { optional ->
-                                        dependencies.add(AddonDependency(it, optional, terminal.text.toBoolean()))
+                                        dependencies.add(AddonDependency(it, optional))
                                         lastDependencyOptional = null
                                         lastDependencyName = null
                                     } ?: run {
@@ -126,7 +123,7 @@ object KotlinAddonParser : AddonParser {
                         }
 
                     lastDependencyName?.let {
-                        dependencies.add(AddonDependency(it, lastDependencyOptional ?: false, false))
+                        dependencies.add(AddonDependency(it, lastDependencyOptional ?: false))
                     }
                 }
             }

@@ -100,7 +100,6 @@ private fun parseAddon(addonAnnotation: AnnotationExpr, entryPoint: String): Add
 private fun parseDependency(dependencyAnnotation: AnnotationExpr): AddonDependency {
     var id: String? = null
     var optional = false
-    var mod = false
 
     dependencyAnnotation.childNodes.forEach { annotationNode ->
         if (annotationNode !is MemberValuePair) return@forEach
@@ -114,13 +113,9 @@ private fun parseDependency(dependencyAnnotation: AnnotationExpr): AddonDependen
             "optional" -> {
                 optional = (annotationNode.value as BooleanLiteralExpr).value
             }
-
-            "mod" -> {
-                mod = (annotationNode.value as BooleanLiteralExpr).value
-            }
         }
     }
 
-    return AddonDependency(requireNotNull(id), optional, mod)
+    return AddonDependency(requireNotNull(id), optional)
 }
 
