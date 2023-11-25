@@ -4,8 +4,6 @@ import org.gradle.api.Project
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
-import su.plo.voice.api.addon.AddonLoaderScope
-import su.plo.voice.api.addon.AddonsLoader
 import su.plo.voice.plugin.AddonMeta
 import java.io.File
 

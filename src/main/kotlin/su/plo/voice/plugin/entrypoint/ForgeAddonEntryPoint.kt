@@ -109,7 +109,7 @@ object ForgeAddonEntryPoint : AddonEntryPoint() {
             Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL,
             fullClassName,
             null,
-            null,
+            classOwner,
             null
         )
 

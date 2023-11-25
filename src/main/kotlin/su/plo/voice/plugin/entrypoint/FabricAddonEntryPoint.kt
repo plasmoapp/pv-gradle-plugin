@@ -84,7 +84,7 @@ object FabricAddonEntryPoint : AddonEntryPoint() {
             Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL,
             fullClassName,
             null,
-            null,
+            classOwner,
             arrayOf("net/fabricmc/api/ModInitializer")
         )
 
