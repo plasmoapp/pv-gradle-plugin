@@ -149,6 +149,7 @@ abstract class AddonEntryPoint {
 
         fun processAddons(project: Project, addons: List<AddonMeta>): List<File> {
             BukkitAddonEntryPoint.generate(project, addons)
+            MinestomAddonEntryPoint.generate(project, addons)
 
             FabricAddonEntryPoint.generate(project, addons)
             ForgeAddonEntryPoint.generate(project, addons)
