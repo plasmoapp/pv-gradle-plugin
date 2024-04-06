@@ -10,7 +10,7 @@ import java.io.File
 
 object JavaAddonParser : AddonParser {
 
-    override fun parseAddon(file: File): AddonMeta? {
+    override fun parseAddon(sourceFiles: Collection<File>, file: File): AddonMeta? {
         val parsedFile = try {
             StaticJavaParser.parse(file)
             // todo: "Text Block Literals are not supported." Just skip for now, but it can be a problem with modern java code
@@ -25,6 +25,7 @@ object JavaAddonParser : AddonParser {
                 .getOrNull(0) ?: return@forEach
 
             return parseAddon(
+                sourceFiles,
                 addonAnnotation,
                 parsedFile.packageDeclaration.get().nameAsString + "." + node.nameAsString
             )
@@ -34,7 +35,7 @@ object JavaAddonParser : AddonParser {
     }
 }
 
-private fun parseAddon(addonAnnotation: AnnotationExpr, entryPoint: String): AddonMeta {
+private fun parseAddon(sourceFiles: Collection<File>, addonAnnotation: AnnotationExpr, entryPoint: String): AddonMeta {
     var id: String? = null
     var name: String? = null
     var loaderScope: AddonLoaderScope? = null
@@ -62,7 +63,13 @@ private fun parseAddon(addonAnnotation: AnnotationExpr, entryPoint: String): Add
             }
 
             "version" -> {
-                version = (annotationNode.value as StringLiteralExpr).asString()
+                version = if (annotationNode.value.isFieldAccessExpr) {
+                    val fieldAccess = annotationNode.value.asFieldAccessExpr()
+
+                    parseStringField(sourceFiles, fieldAccess.scope.toString(), fieldAccess.nameAsString)
+                } else {
+                    (annotationNode.value as StringLiteralExpr).asString()
+                }
             }
 
             "license" -> {

@@ -5,15 +5,15 @@ import su.plo.voice.plugin.parser.JavaAddonParser
 import su.plo.voice.plugin.parser.KotlinAddonParser
 import java.io.File
 
-fun File.parseAddonMeta() = parseAddon(this)
+fun File.parseAddonMeta(sourceFiles: Collection<File>) = parseAddon(sourceFiles, this)
 
-private fun parseAddon(file: File): AddonMeta? {
+private fun parseAddon(sourceFiles: Collection<File>, file: File): AddonMeta? {
     val fileName = file.name
 
     if (fileName.endsWith(".java")) {
-        return JavaAddonParser.parseAddon(file)
+        return JavaAddonParser.parseAddon(sourceFiles, file)
     } else if (fileName.endsWith(".kt")) {
-        return KotlinAddonParser.parseAddon(file)
+        return KotlinAddonParser.parseAddon(sourceFiles, file)
     }
 
     return null

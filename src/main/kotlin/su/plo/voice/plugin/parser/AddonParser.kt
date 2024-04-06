@@ -5,5 +5,5 @@ import java.io.File
 
 interface AddonParser {
 
-    fun parseAddon(file: File): AddonMeta?
+    fun parseAddon(sourceFiles: Collection<File>, file: File): AddonMeta?
 }

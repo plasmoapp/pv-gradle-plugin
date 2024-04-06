@@ -16,7 +16,7 @@ import java.io.File
 
 object KotlinAddonParser : AddonParser {
 
-    override fun parseAddon(file: File): AddonMeta? {
+    override fun parseAddon(sourceFiles: Collection<File>, file: File): AddonMeta? {
         val source = AstSource.File(file.absolutePath.toString())
 
         val ast = KotlinGrammarAntlrKotlinParser.parseKotlinFile(source)
@@ -40,6 +40,7 @@ object KotlinAddonParser : AddonParser {
                 .getOrNull(0) ?: return@forEach
 
             return parseAddon(
+                sourceFiles,
                 addonAnnotation,
                 packageName!! + "." + astFile.identifier!!.identifier
             )
@@ -48,7 +49,7 @@ object KotlinAddonParser : AddonParser {
         return null
     }
 
-    private fun parseAddon(addonAnnotation: KlassAnnotation, entryPoint: String): AddonMeta? {
+    private fun parseAddon(sourceFiles: Collection<File>, addonAnnotation: KlassAnnotation, entryPoint: String): AddonMeta? {
         var id: String? = null
         var name: String? = null
         var loaderScope: AddonLoaderScope? = null
@@ -78,7 +79,13 @@ object KotlinAddonParser : AddonParser {
                 }
 
                 "version" -> {
-                    version = getString(expression)
+                    version = if (expression is KlassIdentifier) {
+                        val terminals = findChild(expression, DefaultAstTerminal::class.java)
+
+                        parseStringField(sourceFiles, expression.identifier, terminals[1].text)
+                    } else {
+                        getString(expression)
+                    }
                 }
 
                 "license" -> {

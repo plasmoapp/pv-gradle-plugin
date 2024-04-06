@@ -31,11 +31,11 @@ open class GenerateLoadersEntryPointsTask : DefaultTask() {
         val sourceFiles = HashSet(mainSourceSet.java.sourceDirectories.asFileTree.files)
             .plus(kotlinMainSourceSet.kotlin.sourceDirectories.asFileTree.files)
 
-        val addons = sourceFiles.mapNotNull { it.parseAddonMeta() }
+        val addons = sourceFiles.mapNotNull { it.parseAddonMeta(sourceFiles) }
         if (addons.isEmpty()) return
 
         AddonEntryPoint.processAddons(project, addons)
-        File(project.buildDir, CACHE_FILE_PATH).writeText("")
+//        File(project.buildDir, CACHE_FILE_PATH).writeText("")
     }
 
     companion object {
