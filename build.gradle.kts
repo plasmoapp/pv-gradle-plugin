@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.toml4j)
 
     implementation(libs.asm)
+    implementation(libs.idea.ext)
 
     implementation("su.plo.voice.api:server:${libs.versions.plasmovoice.get()}")
     implementation("su.plo.voice.api:client:${libs.versions.plasmovoice.get()}")
