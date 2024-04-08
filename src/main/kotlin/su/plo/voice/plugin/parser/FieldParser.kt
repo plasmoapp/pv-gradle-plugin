@@ -10,7 +10,12 @@ fun parseStringField(sourceFiles: Collection<File>, className: String, fieldName
         val fileName = file.name
 
         if (fileName.endsWith(".java")) {
-            val parsedFile = StaticJavaParser.parse(file)
+            val parsedFile = try {
+                StaticJavaParser.parse(file)
+                // todo: "Text Block Literals are not supported." Just skip for now, but it can be a problem with modern java code
+            } catch (e: Exception) {
+                return@forEach
+            }
 
             val foundClass = parsedFile.childNodes
                 .filterIsInstance<ClassOrInterfaceDeclaration>()
