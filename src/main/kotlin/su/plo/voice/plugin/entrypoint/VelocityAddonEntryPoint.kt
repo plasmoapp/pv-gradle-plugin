@@ -1,5 +1,6 @@
 package su.plo.voice.plugin.entrypoint
 
+import com.github.javaparser.ast.CompilationUnit
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -96,7 +97,7 @@ object VelocityAddonEntryPoint : AddonEntryPoint() {
 
         val packageDir = File(
             project.buildDir,
-            "generated/sources/plasmovoice/java/${packageName.replace(".", "/")}"
+            "classes/java/main/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(

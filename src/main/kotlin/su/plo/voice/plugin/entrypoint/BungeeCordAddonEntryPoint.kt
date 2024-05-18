@@ -88,7 +88,7 @@ object BungeeCordAddonEntryPoint : AddonEntryPoint() {
 
         val packageDir = File(
             project.buildDir,
-            "generated/sources/plasmovoice/java/${packageName.replace(".", "/")}"
+            "classes/java/main/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
