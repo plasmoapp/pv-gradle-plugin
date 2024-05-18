@@ -12,6 +12,7 @@ val generateLoadersEntrypoints = tasks.create("generateLoadersEntrypoints", Gene
 val sourceSets = extensions.getByType(SourceSetContainer::class.java)
 val mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
+mainSourceSet.java.srcDir("${buildDir}/generated/sources/plasmovoice/java")
 mainSourceSet.resources.srcDir("${buildDir}/generated/sources/plasmovoice/resources")
 
 tasks {

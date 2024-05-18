@@ -132,7 +132,7 @@ object ForgeAddonEntryPoint : AddonEntryPoint() {
 
         val packageDir = File(
             project.buildDir,
-            "classes/java/main/${packageName.replace(".", "/")}"
+            "generated/sources/plasmovoice/java/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
