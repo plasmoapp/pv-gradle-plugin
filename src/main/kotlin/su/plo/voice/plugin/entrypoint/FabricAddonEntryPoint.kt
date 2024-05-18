@@ -104,7 +104,7 @@ object FabricAddonEntryPoint : AddonEntryPoint() {
 
         val packageDir = File(
             project.buildDir,
-            "classes/java/main/${packageName.replace(".", "/")}"
+            "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
