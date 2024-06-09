@@ -11,4 +11,8 @@ tasks {
         relocate("kotlinx.coroutines", "su.plo.voice.libs.kotlinx.coroutines")
         relocate("kotlinx.serialization", "su.plo.voice.libs.kotlinx.serialization")
     }
+
+    build {
+        dependsOn(shadowJar)
+    }
 }
