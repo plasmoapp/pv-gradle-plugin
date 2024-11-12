@@ -1,7 +1,7 @@
 [versions]
 kotlin = "1.9.23"
 
-shadow = "8.1.1"
+shadow = "8.3.5"
 javaparser = "3.25.1"
 kotlinparser = "0.1.0"
 snakeyaml = "2.0"
@@ -13,7 +13,7 @@ plasmovoice = "2.1.0-SNAPSHOT"
 
 [libraries]
 kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-shadow = { module = "com.github.johnrengelman:shadow", version.ref = "shadow" }
+shadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
 javaparser = { module = "com.github.javaparser:javaparser-core", version.ref = "javaparser" }
 kotlinparser = { module = "com.github.kotlinx.ast:grammar-kotlin-parser-antlr-kotlin", version.ref = "kotlinparser" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
