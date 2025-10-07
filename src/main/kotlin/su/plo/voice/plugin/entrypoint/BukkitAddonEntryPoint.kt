@@ -36,7 +36,7 @@ object BukkitAddonEntryPoint : AddonEntryPoint() {
         addon.dependencies.filter { it.isOptional }.also { dependencies ->
             if (dependencies.isEmpty()) return@also
 
-            pluginYml["softdepend"] = dependencies
+            pluginYml["softdepend"] = dependencies.map { it.id }
         }
 
         val resourcesDir = File(
