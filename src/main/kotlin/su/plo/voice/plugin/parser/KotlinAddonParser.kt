@@ -64,11 +64,11 @@ object KotlinAddonParser : AddonParser {
             when (annotationNode.identifier!!.identifier) {
 
                 "id" -> {
-                    id = getString(expression)
+                    id = expression.getString(sourceFiles)
                 }
 
                 "name" -> {
-                    name = getString(expression)
+                    name = expression.getString(sourceFiles)
                 }
 
                 "scope" -> {
@@ -79,17 +79,11 @@ object KotlinAddonParser : AddonParser {
                 }
 
                 "version" -> {
-                    version = if (expression is KlassIdentifier) {
-                        val terminals = findChild(expression, DefaultAstTerminal::class.java)
-
-                        parseStringField(sourceFiles, expression.identifier, terminals[1].text)
-                    } else {
-                        getString(expression)
-                    }
+                    version = expression.getString(sourceFiles)
                 }
 
                 "license" -> {
-                    license = getString(expression)
+                    license = expression.getString(sourceFiles)
                 }
 
                 "authors" -> {
@@ -167,8 +161,14 @@ object KotlinAddonParser : AddonParser {
         }.flatten()
     }
 
-    private fun getString(ast: Ast): String {
-        return ((ast as KlassString).children[0] as StringComponentRaw).string
+    private fun Ast.getString(sourceFiles: Collection<File>): String {
+        if (this is KlassIdentifier) {
+            val terminals = findChild(this, DefaultAstTerminal::class.java)
+
+            return parseStringField(sourceFiles, this.identifier, terminals[1].text)
+        } else {
+            return ((this as KlassString).children[0] as StringComponentRaw).string
+        }
     }
 }
 
