@@ -38,8 +38,8 @@ repositories {
 
 publishing {
     repositories {
-        maven("https://repo.plasmoverse.com/snapshots") {
-            name = "PlasmoVerseSnapshots"
+        maven("https://repo.plasmoverse.com/releases") {
+            name = "PlasmoVerseReleases"
 
             credentials {
                 username = System.getenv("MAVEN_USERNAME")
