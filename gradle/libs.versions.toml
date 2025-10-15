@@ -1,19 +1,19 @@
 [versions]
 kotlin = "1.9.23"
 
-shadow = "8.3.5"
-javaparser = "3.25.1"
+shadow = "9.2.2"
+javaparser = "3.27.1"
 kotlinparser = "v0.1.0"
-snakeyaml = "2.0"
+snakeyaml = "2.5"
 toml4j = "0.7.2"
-asm = "9.6"
+asm = "9.9"
 idea-ext = "1.1.8"
 
 plasmovoice = "2.1.5"
 
 [libraries]
 kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-shadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
+shadow = { module = "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin", version.ref = "shadow" }
 javaparser = { module = "com.github.javaparser:javaparser-core", version.ref = "javaparser" }
 kotlinparser = { module = "com.github.kotlinx.ast:grammar-kotlin-parser-antlr-kotlin", version.ref = "kotlinparser" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
