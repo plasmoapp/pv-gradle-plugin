@@ -33,6 +33,7 @@ object FabricAddonEntryPoint : AddonEntryPoint() {
         fabricJson.addProperty("name", addon.id)
         fabricJson.addProperty("version", addon.version)
         fabricJson.addProperty("license", addon.license)
+        fabricJson.addProperty("icon", "assets/${addon.id.replace("-", "_")}/icon.png")
         fabricJson.add("authors", JsonArray().also { authors ->
             addon.authors.forEach { authors.add(it) }
         })

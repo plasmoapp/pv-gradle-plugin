@@ -38,6 +38,7 @@ object NeoForgeAddonEntryPoint : AddonEntryPoint() {
                 mod["modId"] = addon.id.replace("-", "_")
                 mod["version"] = addon.version
                 mod["displayName"] = addon.id
+                mod["logoFile"] = "assets/${addon.id.replace("-", "_")}/icon.png"
                 mod["authors"] = addon.authors.joinToString(", ")
             }
         )
