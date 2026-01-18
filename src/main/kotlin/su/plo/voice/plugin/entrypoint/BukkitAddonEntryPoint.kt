@@ -73,10 +73,10 @@ object BukkitAddonEntryPoint : AddonEntryPoint() {
             generateConstructor(cw, constructorMethod, fullClassName, classOwner, addons)
         }
 
-        // Add onLoad method
-        val loadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onLoad", "()V", null, null)
-        loadMethod.visitCodeThenEnd {
-            generateServerAddonsLoaders(loadMethod, fullClassName, addons)
+        // Add onEnable method
+        val enableMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onEnable", "()V", null, null)
+        enableMethod.visitCodeThenEnd {
+            generateServerAddonsLoaders(enableMethod, fullClassName, addons)
         }
 
         // Add onDisable method
