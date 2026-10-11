@@ -31,14 +31,21 @@ open class GenerateLoadersEntryPointsTask : DefaultTask() {
         val sourceFiles = HashSet(mainSourceSet.java.sourceDirectories.asFileTree.files)
             .plus(kotlinMainSourceSet.kotlin.sourceDirectories.asFileTree.files)
 
+        // entrypoints of a platform that is no longer generated would stay in the jar otherwise
+        File(project.buildDir, GENERATED_PATH).deleteRecursively()
+
         val addons = sourceFiles.mapNotNull { it.parseAddonMeta(sourceFiles) }
         if (addons.isEmpty()) return
 
-        AddonEntryPoint.processAddons(project, addons)
+        val extension = project.extensions.getByType(EntryPointsExtension::class.java)
+
+        AddonEntryPoint.processAddons(project, addons, extension)
 //        File(project.buildDir, CACHE_FILE_PATH).writeText("")
     }
 
     companion object {
+
+        private const val GENERATED_PATH = "generated/sources/plasmovoice"
 
         private const val CACHE_FILE_PATH = "generated/sources/plasmovoice/.cache"
     }

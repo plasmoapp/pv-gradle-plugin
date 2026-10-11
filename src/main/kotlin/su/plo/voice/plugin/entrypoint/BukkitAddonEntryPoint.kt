@@ -8,7 +8,7 @@ import su.plo.voice.plugin.AddonMeta
 import su.plo.voice.plugin.extension.visitCodeThenEnd
 import java.io.File
 
-object BukkitAddonEntryPoint : AddonEntryPoint() {
+object BukkitAddonEntryPoint : BukkitBasedAddonEntryPoint() {
 
     override fun generate(project: Project, addons: List<AddonMeta>) {
         val serverAddons = addons.filter { it.loaderScope.isServer }
@@ -76,12 +76,14 @@ object BukkitAddonEntryPoint : AddonEntryPoint() {
         // Add onEnable method
         val enableMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onEnable", "()V", null, null)
         enableMethod.visitCodeThenEnd {
+            generatePlasmoVoiceEnabledCheck(enableMethod, disableSelf = true)
             generateServerAddonsLoaders(enableMethod, fullClassName, addons)
         }
 
         // Add onDisable method
         val unloadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onDisable", "()V", null, null)
         unloadMethod.visitCodeThenEnd {
+            generatePlasmoVoiceEnabledCheck(unloadMethod, disableSelf = false)
             generateServerAddonsUnloaders(unloadMethod, fullClassName, addons)
         }
 

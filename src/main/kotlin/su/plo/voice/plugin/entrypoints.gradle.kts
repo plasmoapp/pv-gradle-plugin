@@ -7,6 +7,8 @@ plugins {
     id("su.plo.voice.plugin.relocate-kotlin")
 }
 
+project.extensions.create("entrypoints", EntryPointsExtension::class)
+
 val generateLoadersEntrypoints = tasks.create("generateLoadersEntrypoints", GenerateLoadersEntryPointsTask::class.java)
 
 val sourceSets = extensions.getByType(SourceSetContainer::class.java)

@@ -5,9 +5,24 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import su.plo.voice.plugin.AddonMeta
+import su.plo.voice.plugin.EntryPointsExtension
 import java.io.File
 
 abstract class AddonEntryPoint {
+
+    protected val AddonMeta.fieldName: String
+        get() = id.replace("-[a-z]".toRegex()) { matchResult ->
+            matchResult.value[1].uppercase()
+        }
+
+    protected val AddonMeta.entryPointClass: String
+        get() = entryPoint.replace(".", "/")
+
+    protected val AddonMeta.entryPointDescriptor: String
+        get() = "L$entryPointClass;"
+
+    protected fun addonsConstructorDescriptor(addons: List<AddonMeta>): String =
+        addons.joinToString("", prefix = "(", postfix = ")V") { it.entryPointDescriptor }
 
     protected fun generateServerAddonsLoaders(
         method: MethodVisitor,
@@ -46,20 +61,7 @@ abstract class AddonEntryPoint {
         classOwner: String,
         addons: List<AddonMeta>
     ) {
-        val addonIds = addons.map {
-            val addonId = it.id.replace("-[a-z]".toRegex()) { matchResult ->
-                matchResult.value.substring(1).capitalize()
-            }
-            val addonEntryPoint = it.entryPoint.replace(".", "/")
-
-            Pair(addonId, addonEntryPoint)
-        }
-
-        // Define field
-        addonIds.forEach { (addonId, addonEntryPoint) ->
-            val fv = cv.visitField(Opcodes.ACC_PRIVATE + Opcodes.ACC_FINAL, addonId, "L$addonEntryPoint;", null, null)
-            fv.visitEnd()
-        }
+        generateFields(cv, addons)
 
         // Generate default constructor
         method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
@@ -67,19 +69,58 @@ abstract class AddonEntryPoint {
         method.visitMethodInsn(Opcodes.INVOKESPECIAL, classOwner, "<init>", "()V", false)
 
         // Initialize the field
-        addonIds.forEach { (addonId, addonEntryPoint) ->
+        addons.forEach { addon ->
             method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
 
-            method.visitTypeInsn(Opcodes.NEW, addonEntryPoint)
+            method.visitTypeInsn(Opcodes.NEW, addon.entryPointClass)
             method.visitInsn(Opcodes.DUP)
-            method.visitMethodInsn(Opcodes.INVOKESPECIAL, addonEntryPoint, "<init>", "()V", false)
+            method.visitMethodInsn(Opcodes.INVOKESPECIAL, addon.entryPointClass, "<init>", "()V", false)
             method.visitFieldInsn(
                 Opcodes.PUTFIELD,
                 className,
-                addonId,
-                "L$addonEntryPoint;"
+                addon.fieldName,
+                addon.entryPointDescriptor
             )
         }
+    }
+
+    protected fun generateAddonsConstructor(
+        cv: ClassVisitor,
+        method: MethodVisitor,
+        className: String,
+        classOwner: String,
+        addons: List<AddonMeta>
+    ) {
+        generateFields(cv, addons)
+
+        // Generate constructor accepting already instantiated addons
+        method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
+
+        method.visitMethodInsn(Opcodes.INVOKESPECIAL, classOwner, "<init>", "()V", false)
+
+        // Initialize the field
+        addons.forEachIndexed { index, addon ->
+            method.visitVarInsn(Opcodes.ALOAD, 0) // Load 'this'
+            method.visitVarInsn(Opcodes.ALOAD, index + 1) // Load addon argument
+
+            method.visitFieldInsn(
+                Opcodes.PUTFIELD,
+                className,
+                addon.fieldName,
+                addon.entryPointDescriptor
+            )
+        }
+    }
+
+    private fun generateFields(cv: ClassVisitor, addons: List<AddonMeta>) = addons.forEach { addon ->
+        val fv = cv.visitField(
+            Opcodes.ACC_PRIVATE + Opcodes.ACC_FINAL,
+            addon.fieldName,
+            addon.entryPointDescriptor,
+            null,
+            null
+        )
+        fv.visitEnd()
     }
 
     private fun generateLoadMethods(
@@ -108,11 +149,6 @@ abstract class AddonEntryPoint {
         addon: AddonMeta,
         methodName: String,
     ) {
-        val addonId = addon.id.replace("-[a-z]".toRegex()) { matchResult ->
-            matchResult.value.substring(1).capitalize()
-        }
-        val addonEntryPoint = addon.entryPoint.replace(".", "/")
-
         // Generate method body
         method.visitMethodInsn(
             Opcodes.INVOKESTATIC,
@@ -126,8 +162,8 @@ abstract class AddonEntryPoint {
         method.visitFieldInsn(
             Opcodes.GETFIELD,
             className,
-            addonId,
-            "L$addonEntryPoint;"
+            addon.fieldName,
+            addon.entryPointDescriptor
         )
 
         method.visitMethodInsn(
@@ -147,8 +183,12 @@ abstract class AddonEntryPoint {
 
     companion object {
 
-        fun processAddons(project: Project, addons: List<AddonMeta>): List<File> {
-            BukkitAddonEntryPoint.generate(project, addons)
+        fun processAddons(project: Project, addons: List<AddonMeta>, extension: EntryPointsExtension): List<File> {
+            if (extension.paperPlugin) {
+                PaperAddonEntryPoint(extension.paperOpenClassloader).generate(project, addons)
+            } else {
+                BukkitAddonEntryPoint.generate(project, addons)
+            }
             MinestomAddonEntryPoint.generate(project, addons)
 
             FabricAddonEntryPoint.generate(project, addons)
