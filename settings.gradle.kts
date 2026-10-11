@@ -4,7 +4,6 @@ pluginManagement {
         mavenLocal()
         mavenCentral()
         google()
-        maven("https://maven.minecraftforge.net")
     }
 }
 

@@ -152,7 +152,6 @@ abstract class AddonEntryPoint {
             MinestomAddonEntryPoint.generate(project, addons)
 
             FabricAddonEntryPoint.generate(project, addons)
-            ForgeAddonEntryPoint.generate(project, addons)
             NeoForgeAddonEntryPoint.generate(project, addons)
 
             VelocityAddonEntryPoint.generate(project, addons)

@@ -27,7 +27,7 @@ Gradle plugin for generating [Plasmo Voice](https://github.com/plasmoapp/plasmo-
 You only need to add the `su.plo.voice.plugin` Gradle plugin, and entrypoints will be generated and added to source sets.
 
 Note: 
-This plugin adds all platforms (Spigot/BungeeCord/Velocity/Fabric/Forge) to your project classpath.
+This plugin adds all platforms (Bukkit/BungeeCord/Velocity/Fabric/NeoForge) to your project classpath.
 
 `settings.gradle.kts`
 ```kotlin
