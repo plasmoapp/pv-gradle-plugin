@@ -1,6 +1,5 @@
 package su.plo.voice.plugin.entrypoint
 
-import com.github.javaparser.ast.CompilationUnit
 import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
@@ -34,7 +33,7 @@ object BungeeCordAddonEntryPoint : AddonEntryPoint() {
         addon.dependencies.filter { it.isOptional }.also { dependencies ->
             if (dependencies.isEmpty()) return@also
 
-            pluginYml["softDepends"] = dependencies
+            pluginYml["softDepends"] = dependencies.map { it.id }
         }
 
         val resourcesDir = File(
