@@ -8,7 +8,9 @@ import su.plo.voice.plugin.AddonMeta
 import su.plo.voice.plugin.extension.visitCodeThenEnd
 import java.io.File
 
-object BukkitAddonEntryPoint : BukkitBasedAddonEntryPoint() {
+class BukkitAddonEntryPoint(
+    minPlasmoVoiceVersion: String?,
+) : BukkitBasedAddonEntryPoint(minPlasmoVoiceVersion) {
 
     override fun generate(project: Project, addons: List<AddonMeta>) {
         val serverAddons = addons.filter { it.loaderScope.isServer }
@@ -77,6 +79,7 @@ object BukkitAddonEntryPoint : BukkitBasedAddonEntryPoint() {
         val enableMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onEnable", "()V", null, null)
         enableMethod.visitCodeThenEnd {
             generatePlasmoVoiceEnabledCheck(enableMethod, disableSelf = true)
+            generatePlasmoVoiceVersionCheck(enableMethod, fullClassName, disableSelf = true)
             generateServerAddonsLoaders(enableMethod, fullClassName, addons)
         }
 
@@ -84,6 +87,7 @@ object BukkitAddonEntryPoint : BukkitBasedAddonEntryPoint() {
         val unloadMethod = cw.visitMethod(Opcodes.ACC_PUBLIC, "onDisable", "()V", null, null)
         unloadMethod.visitCodeThenEnd {
             generatePlasmoVoiceEnabledCheck(unloadMethod, disableSelf = false)
+            generatePlasmoVoiceVersionCheck(unloadMethod, fullClassName, disableSelf = false)
             generateServerAddonsUnloaders(unloadMethod, fullClassName, addons)
         }
 
@@ -99,5 +103,7 @@ object BukkitAddonEntryPoint : BukkitBasedAddonEntryPoint() {
             packageDir,
             "${className}.class"
         ).writeBytes(cw.toByteArray())
+
+        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(project, packageName.replace(".", "/"))
     }
 }

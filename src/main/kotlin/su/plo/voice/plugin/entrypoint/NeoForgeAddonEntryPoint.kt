@@ -11,7 +11,9 @@ import su.plo.voice.plugin.AddonMeta
 import su.plo.voice.plugin.extension.visitCodeThenEnd
 import java.io.File
 
-object NeoForgeAddonEntryPoint : AddonEntryPoint() {
+class NeoForgeAddonEntryPoint(
+    private val minPlasmoVoiceVersion: String,
+) : AddonEntryPoint() {
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
@@ -48,7 +50,7 @@ object NeoForgeAddonEntryPoint : AddonEntryPoint() {
             addonDependencies.add(HashMap<String, Any>().also { dependency ->
                 dependency["modId"] = "plasmovoice"
                 dependency["type"] = "required"
-                dependency["versionRange"] = "[2.1.0,)"
+                dependency["versionRange"] = "[$minPlasmoVoiceVersion,)"
                 dependency["ordering"] = "AFTER"
             })
 

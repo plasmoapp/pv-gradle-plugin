@@ -26,6 +26,19 @@ dependencies {
     implementation("su.plo.voice.api:proxy:${libs.versions.plasmovoice.get()}")
 }
 
+val templates: SourceSet by sourceSets.creating
+
+tasks {
+    named<JavaCompile>(templates.compileJavaTaskName) {
+        options.release.set(8)
+        options.compilerArgs.add("-Xlint:-options")
+    }
+
+    processResources {
+        from(templates.output)
+    }
+}
+
 repositories {
     mavenLocal()
     mavenCentral()

@@ -4,4 +4,6 @@ open class EntryPointsExtension {
     var paperPlugin: Boolean = false
 
     var paperOpenClassloader: Boolean = false
+
+    var minPlasmoVoiceVersion: String? = null
 }

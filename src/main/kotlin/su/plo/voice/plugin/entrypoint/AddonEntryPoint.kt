@@ -1,9 +1,14 @@
 package su.plo.voice.plugin.entrypoint
 
 import org.gradle.api.Project
+import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.commons.ClassRemapper
+import org.objectweb.asm.commons.SimpleRemapper
 import su.plo.voice.plugin.AddonMeta
 import su.plo.voice.plugin.EntryPointsExtension
 import java.io.File
@@ -175,6 +180,48 @@ abstract class AddonEntryPoint {
         )
     }
 
+    protected fun generatePlasmoVoiceVersionCheck(
+        method: MethodVisitor,
+        className: String,
+        minVersion: String,
+        messageLocal: Int,
+        generateUnsupported: (messageLocal: Int) -> Unit
+    ) {
+        val supported = Label()
+
+        method.visitLdcInsn(minVersion)
+        method.visitMethodInsn(
+            Opcodes.INVOKESTATIC,
+            versionCheckClass(className.substringBeforeLast("/")),
+            "unsupportedMessage",
+            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+            false
+        )
+        method.visitVarInsn(Opcodes.ASTORE, messageLocal)
+
+        method.visitVarInsn(Opcodes.ALOAD, messageLocal)
+        method.visitJumpInsn(Opcodes.IFNULL, supported)
+        generateUnsupported(messageLocal)
+        method.visitInsn(Opcodes.RETURN)
+
+        method.visitLabel(supported)
+    }
+
+    protected fun writeVersionCheckClass(project: Project, packagePath: String) {
+        val template = AddonEntryPoint::class.java.getResourceAsStream("/$VERSION_CHECK_TEMPLATE.class")
+            ?.use { ClassReader(it) }
+            ?: error("$VERSION_CHECK_TEMPLATE.class is missing from the plugin jar")
+
+        val writer = ClassWriter(0)
+        template.accept(ClassRemapper(writer, SimpleRemapper(Opcodes.ASM9, VERSION_CHECK_TEMPLATE, versionCheckClass(packagePath))), 0)
+
+        File(project.buildDir, "generated/sources/plasmovoice/classes/${versionCheckClass(packagePath)}.class")
+            .also { it.parentFile.mkdirs() }
+            .writeBytes(writer.toByteArray())
+    }
+
+    private fun versionCheckClass(packagePath: String) = "$packagePath/PlasmoVoiceVersionCheck"
+
     abstract fun generate(project: Project, addons: List<AddonMeta>)
 
     protected abstract fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>)
@@ -183,19 +230,28 @@ abstract class AddonEntryPoint {
 
     companion object {
 
+        private const val VERSION_CHECK_TEMPLATE = "su/plo/voice/plugin/template/PlasmoVoiceVersionCheck"
+        private const val DEFAULT_MIN_PLASMO_VOICE_VERSION = "2.1.0"
+        private val VERSION_REGEX = "\\d+(\\.\\d+)*".toRegex()
+
         fun processAddons(project: Project, addons: List<AddonMeta>, extension: EntryPointsExtension): List<File> {
+            val minPlasmoVoiceVersion = extension.minPlasmoVoiceVersion
+            require(minPlasmoVoiceVersion == null || minPlasmoVoiceVersion.matches(VERSION_REGEX)) {
+                "minPlasmoVoiceVersion should be dot-separated numbers (e.g. '2.1.5'), got '$minPlasmoVoiceVersion'"
+            }
+
             if (extension.paperPlugin) {
-                PaperAddonEntryPoint(extension.paperOpenClassloader).generate(project, addons)
+                PaperAddonEntryPoint(extension.paperOpenClassloader, minPlasmoVoiceVersion).generate(project, addons)
             } else {
-                BukkitAddonEntryPoint.generate(project, addons)
+                BukkitAddonEntryPoint(minPlasmoVoiceVersion).generate(project, addons)
             }
             MinestomAddonEntryPoint.generate(project, addons)
 
-            FabricAddonEntryPoint.generate(project, addons)
-            NeoForgeAddonEntryPoint.generate(project, addons)
+            FabricAddonEntryPoint(minPlasmoVoiceVersion ?: DEFAULT_MIN_PLASMO_VOICE_VERSION).generate(project, addons)
+            NeoForgeAddonEntryPoint(minPlasmoVoiceVersion ?: DEFAULT_MIN_PLASMO_VOICE_VERSION).generate(project, addons)
 
-            VelocityAddonEntryPoint.generate(project, addons)
-            BungeeCordAddonEntryPoint.generate(project, addons)
+            VelocityAddonEntryPoint(minPlasmoVoiceVersion).generate(project, addons)
+            BungeeCordAddonEntryPoint(minPlasmoVoiceVersion).generate(project, addons)
 
             return emptyList()
         }

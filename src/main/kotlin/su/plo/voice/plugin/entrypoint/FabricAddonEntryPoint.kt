@@ -10,7 +10,9 @@ import su.plo.voice.plugin.AddonMeta
 import su.plo.voice.plugin.extension.visitCodeThenEnd
 import java.io.File
 
-object FabricAddonEntryPoint : AddonEntryPoint() {
+class FabricAddonEntryPoint(
+    private val minPlasmoVoiceVersion: String,
+) : AddonEntryPoint() {
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
@@ -44,7 +46,7 @@ object FabricAddonEntryPoint : AddonEntryPoint() {
             })
         })
         fabricJson.add("depends", JsonObject().also { depends ->
-            depends.addProperty("plasmovoice", ">=2.1.0-0")
+            depends.addProperty("plasmovoice", ">=$minPlasmoVoiceVersion-0")
             addon.dependencies.filter { !it.isOptional }.forEach { dependency ->
                 depends.addProperty(dependency.id, "*")
             }
