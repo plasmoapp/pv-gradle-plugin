@@ -18,5 +18,5 @@ mainSourceSet.resources.srcDir(layout.buildDirectory.dir("generated/sources/plas
 mainSourceSet.resources.srcDir(layout.buildDirectory.dir("generated/sources/plasmovoice/resources"))
 
 tasks {
-    named("classes") { dependsOn(generateLoadersEntrypoints) }
+    named("processResources") { dependsOn(generateLoadersEntrypoints) }
 }
