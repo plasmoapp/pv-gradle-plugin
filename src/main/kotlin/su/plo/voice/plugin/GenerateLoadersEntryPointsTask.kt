@@ -17,7 +17,7 @@ open class GenerateLoadersEntryPointsTask : DefaultTask() {
 //        val mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 //
 //        inputs.files(mainSourceSet.java.sourceDirectories.asFileTree)
-//        outputs.files(File(project.buildDir, CACHE_FILE_PATH))
+//        outputs.files(File(project.layout.buildDirectory.get().asFile, CACHE_FILE_PATH))
 //        outputs.cacheIf { true }
 //    }
 
@@ -32,7 +32,7 @@ open class GenerateLoadersEntryPointsTask : DefaultTask() {
             .plus(kotlinMainSourceSet.kotlin.sourceDirectories.asFileTree.files)
 
         // entrypoints of a platform that is no longer generated would stay in the jar otherwise
-        File(project.buildDir, GENERATED_PATH).deleteRecursively()
+        File(project.layout.buildDirectory.get().asFile, GENERATED_PATH).deleteRecursively()
 
         val addons = sourceFiles.mapNotNull { it.parseAddonMeta(sourceFiles) }
         if (addons.isEmpty()) return
@@ -40,7 +40,7 @@ open class GenerateLoadersEntryPointsTask : DefaultTask() {
         val extension = project.extensions.getByType(EntryPointsExtension::class.java)
 
         AddonEntryPoint.processAddons(project, addons, extension)
-//        File(project.buildDir, CACHE_FILE_PATH).writeText("")
+//        File(project.layout.buildDirectory.get().asFile, CACHE_FILE_PATH).writeText("")
     }
 
     companion object {

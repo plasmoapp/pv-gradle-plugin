@@ -55,7 +55,7 @@ class VelocityAddonEntryPoint(
         velocityJson.addProperty("main", "${packageName}.VelocityEntryPoint")
 
         val resourcesDir = File(
-            project.buildDir,
+            project.layout.buildDirectory.get().asFile,
             "generated/sources/plasmovoice/resources"
         ).also { it.mkdirs() }
 
@@ -100,7 +100,7 @@ class VelocityAddonEntryPoint(
         cw.visitEnd()
 
         val packageDir = File(
-            project.buildDir,
+            project.layout.buildDirectory.get().asFile,
             "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 

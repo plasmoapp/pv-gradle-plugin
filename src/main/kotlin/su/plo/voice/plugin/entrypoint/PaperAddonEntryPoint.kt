@@ -45,7 +45,7 @@ class PaperAddonEntryPoint(
         )
 
         val resourcesDir = File(
-            project.buildDir,
+            project.layout.buildDirectory.get().asFile,
             "generated/sources/plasmovoice/resources"
         ).also { it.mkdirs() }
 
@@ -63,7 +63,7 @@ class PaperAddonEntryPoint(
         val packagePath = packageName.replace(".", "/")
 
         val packageDir = File(
-            project.buildDir,
+            project.layout.buildDirectory.get().asFile,
             "generated/sources/plasmovoice/classes/$packagePath"
         ).also { it.mkdirs() }
 

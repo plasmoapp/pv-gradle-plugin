@@ -42,7 +42,7 @@ class BukkitAddonEntryPoint(
         }
 
         val resourcesDir = File(
-            project.buildDir,
+            project.layout.buildDirectory.get().asFile,
             "generated/sources/plasmovoice/resources"
         ).also { it.mkdirs() }
 
@@ -95,7 +95,7 @@ class BukkitAddonEntryPoint(
         cw.visitEnd()
 
         val packageDir = File(
-            project.buildDir,
+            project.layout.buildDirectory.get().asFile,
             "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 

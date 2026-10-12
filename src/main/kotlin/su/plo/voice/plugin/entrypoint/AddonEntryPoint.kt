@@ -215,7 +215,7 @@ abstract class AddonEntryPoint {
         val writer = ClassWriter(0)
         template.accept(ClassRemapper(writer, SimpleRemapper(Opcodes.ASM9, VERSION_CHECK_TEMPLATE, versionCheckClass(packagePath))), 0)
 
-        File(project.buildDir, "generated/sources/plasmovoice/classes/${versionCheckClass(packagePath)}.class")
+        File(project.layout.buildDirectory.get().asFile, "generated/sources/plasmovoice/classes/${versionCheckClass(packagePath)}.class")
             .also { it.parentFile.mkdirs() }
             .writeBytes(writer.toByteArray())
     }

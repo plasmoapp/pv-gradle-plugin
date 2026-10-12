@@ -9,14 +9,14 @@ plugins {
 
 project.extensions.create("entrypoints", EntryPointsExtension::class)
 
-val generateLoadersEntrypoints = tasks.create("generateLoadersEntrypoints", GenerateLoadersEntryPointsTask::class.java)
+val generateLoadersEntrypoints = tasks.register("generateLoadersEntrypoints", GenerateLoadersEntryPointsTask::class.java)
 
 val sourceSets = extensions.getByType(SourceSetContainer::class.java)
 val mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
-mainSourceSet.resources.srcDir("${buildDir}/generated/sources/plasmovoice/classes")
-mainSourceSet.resources.srcDir("${buildDir}/generated/sources/plasmovoice/resources")
+mainSourceSet.resources.srcDir(layout.buildDirectory.dir("generated/sources/plasmovoice/classes"))
+mainSourceSet.resources.srcDir(layout.buildDirectory.dir("generated/sources/plasmovoice/resources"))
 
 tasks {
-    getByName("classes").dependsOn(generateLoadersEntrypoints)
+    named("classes") { dependsOn(generateLoadersEntrypoints) }
 }
