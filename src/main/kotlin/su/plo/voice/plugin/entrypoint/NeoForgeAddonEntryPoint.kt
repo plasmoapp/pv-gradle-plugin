@@ -2,7 +2,6 @@ package su.plo.voice.plugin.entrypoint
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
-import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import su.plo.config.toml.TomlWriter
@@ -17,17 +16,17 @@ class NeoForgeAddonEntryPoint(
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
-    override fun generate(project: Project, addons: List<AddonMeta>) {
+    override fun generate(outputDir: File, addons: List<AddonMeta>) {
         val serverClientAddons = addons.filter { it.loaderScope.isClient || it.loaderScope.isServer }
         if (serverClientAddons.isEmpty()) return
 
         val packageName = serverClientAddons[0].entryPoint.substringBeforeLast(".")
 
-        generateJavaFile(project, packageName, serverClientAddons)
-        generateMetaFile(project, packageName, serverClientAddons)
+        generateJavaFile(outputDir, packageName, serverClientAddons)
+        generateMetaFile(outputDir, packageName, serverClientAddons)
     }
 
-    override fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val addon = addons[0]
 
         val modsToml: MutableMap<String, Any> = HashMap()
@@ -81,8 +80,8 @@ class NeoForgeAddonEntryPoint(
         })
 
         val resourcesDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/resources"
+            outputDir,
+            "resources"
         ).also { it.mkdirs() }
 
         val metaInfDir = File(resourcesDir, "META-INF")
@@ -99,7 +98,7 @@ class NeoForgeAddonEntryPoint(
         ).writeText(gson.toJson(packMcMeta))
     }
 
-    override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         // Define class
         val className = "NeoForgeEntryPoint"
         val fullClassName = "${packageName.replace(".", "/")}/$className"
@@ -134,8 +133,8 @@ class NeoForgeAddonEntryPoint(
         cw.visitEnd()
 
         val packageDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
+            outputDir,
+            "classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(

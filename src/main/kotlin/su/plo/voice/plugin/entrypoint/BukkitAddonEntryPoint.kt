@@ -1,6 +1,5 @@
 package su.plo.voice.plugin.entrypoint
 
-import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.yaml.snakeyaml.Yaml
@@ -12,17 +11,17 @@ class BukkitAddonEntryPoint(
     minPlasmoVoiceVersion: String?,
 ) : BukkitBasedAddonEntryPoint(minPlasmoVoiceVersion) {
 
-    override fun generate(project: Project, addons: List<AddonMeta>) {
+    override fun generate(outputDir: File, addons: List<AddonMeta>) {
         val serverAddons = addons.filter { it.loaderScope.isServer }
         if (serverAddons.isEmpty()) return
 
         val packageName = serverAddons[0].entryPoint.substringBeforeLast(".")
 
-        generateJavaFile(project, packageName, serverAddons)
-        generateMetaFile(project, packageName, serverAddons)
+        generateJavaFile(outputDir, packageName, serverAddons)
+        generateMetaFile(outputDir, packageName, serverAddons)
     }
 
-    override fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val addon = addons[0]
 
         val pluginYml: MutableMap<String, Any> = HashMap()
@@ -42,8 +41,8 @@ class BukkitAddonEntryPoint(
         }
 
         val resourcesDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/resources"
+            outputDir,
+            "resources"
         ).also { it.mkdirs() }
 
         File(
@@ -52,7 +51,7 @@ class BukkitAddonEntryPoint(
         ).writeText(Yaml().dump(pluginYml))
     }
 
-    override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         // Define class
         val className = "BukkitEntryPoint"
         val fullClassName = "${packageName.replace(".", "/")}/$className"
@@ -95,8 +94,8 @@ class BukkitAddonEntryPoint(
         cw.visitEnd()
 
         val packageDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
+            outputDir,
+            "classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
@@ -104,6 +103,6 @@ class BukkitAddonEntryPoint(
             "${className}.class"
         ).writeBytes(cw.toByteArray())
 
-        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(project, packageName.replace(".", "/"))
+        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(outputDir, packageName.replace(".", "/"))
     }
 }

@@ -1,6 +1,5 @@
 package su.plo.voice.plugin.entrypoint
 
-import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -10,7 +9,6 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.ClassRemapper
 import org.objectweb.asm.commons.SimpleRemapper
 import su.plo.voice.plugin.AddonMeta
-import su.plo.voice.plugin.EntryPointsExtension
 import java.io.File
 
 abstract class AddonEntryPoint {
@@ -207,7 +205,7 @@ abstract class AddonEntryPoint {
         method.visitLabel(supported)
     }
 
-    protected fun writeVersionCheckClass(project: Project, packagePath: String) {
+    protected fun writeVersionCheckClass(outputDir: File, packagePath: String) {
         val template = AddonEntryPoint::class.java.getResourceAsStream("/$VERSION_CHECK_TEMPLATE.class")
             ?.use { ClassReader(it) }
             ?: error("$VERSION_CHECK_TEMPLATE.class is missing from the plugin jar")
@@ -215,18 +213,18 @@ abstract class AddonEntryPoint {
         val writer = ClassWriter(0)
         template.accept(ClassRemapper(writer, SimpleRemapper(Opcodes.ASM9, VERSION_CHECK_TEMPLATE, versionCheckClass(packagePath))), 0)
 
-        File(project.layout.buildDirectory.get().asFile, "generated/sources/plasmovoice/classes/${versionCheckClass(packagePath)}.class")
+        File(outputDir, "classes/${versionCheckClass(packagePath)}.class")
             .also { it.parentFile.mkdirs() }
             .writeBytes(writer.toByteArray())
     }
 
     private fun versionCheckClass(packagePath: String) = "$packagePath/PlasmoVoiceVersionCheck"
 
-    abstract fun generate(project: Project, addons: List<AddonMeta>)
+    abstract fun generate(outputDir: File, addons: List<AddonMeta>)
 
-    protected abstract fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>)
+    protected abstract fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>)
 
-    protected abstract fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>)
+    protected abstract fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>)
 
     companion object {
 
@@ -234,24 +232,29 @@ abstract class AddonEntryPoint {
         private const val DEFAULT_MIN_PLASMO_VOICE_VERSION = "2.1.0"
         private val VERSION_REGEX = "\\d+(\\.\\d+)*".toRegex()
 
-        fun processAddons(project: Project, addons: List<AddonMeta>, extension: EntryPointsExtension): List<File> {
-            val minPlasmoVoiceVersion = extension.minPlasmoVoiceVersion
+        fun processAddons(
+            outputDir: File,
+            addons: List<AddonMeta>,
+            paperPlugin: Boolean,
+            paperOpenClassloader: Boolean,
+            minPlasmoVoiceVersion: String?,
+        ): List<File> {
             require(minPlasmoVoiceVersion == null || minPlasmoVoiceVersion.matches(VERSION_REGEX)) {
                 "minPlasmoVoiceVersion should be dot-separated numbers (e.g. '2.1.5'), got '$minPlasmoVoiceVersion'"
             }
 
-            if (extension.paperPlugin) {
-                PaperAddonEntryPoint(extension.paperOpenClassloader, minPlasmoVoiceVersion).generate(project, addons)
+            if (paperPlugin) {
+                PaperAddonEntryPoint(paperOpenClassloader, minPlasmoVoiceVersion).generate(outputDir, addons)
             } else {
-                BukkitAddonEntryPoint(minPlasmoVoiceVersion).generate(project, addons)
+                BukkitAddonEntryPoint(minPlasmoVoiceVersion).generate(outputDir, addons)
             }
-            MinestomAddonEntryPoint.generate(project, addons)
+            MinestomAddonEntryPoint.generate(outputDir, addons)
 
-            FabricAddonEntryPoint(minPlasmoVoiceVersion ?: DEFAULT_MIN_PLASMO_VOICE_VERSION).generate(project, addons)
-            NeoForgeAddonEntryPoint(minPlasmoVoiceVersion ?: DEFAULT_MIN_PLASMO_VOICE_VERSION).generate(project, addons)
+            FabricAddonEntryPoint(minPlasmoVoiceVersion ?: DEFAULT_MIN_PLASMO_VOICE_VERSION).generate(outputDir, addons)
+            NeoForgeAddonEntryPoint(minPlasmoVoiceVersion ?: DEFAULT_MIN_PLASMO_VOICE_VERSION).generate(outputDir, addons)
 
-            VelocityAddonEntryPoint(minPlasmoVoiceVersion).generate(project, addons)
-            BungeeCordAddonEntryPoint(minPlasmoVoiceVersion).generate(project, addons)
+            VelocityAddonEntryPoint(minPlasmoVoiceVersion).generate(outputDir, addons)
+            BungeeCordAddonEntryPoint(minPlasmoVoiceVersion).generate(outputDir, addons)
 
             return emptyList()
         }

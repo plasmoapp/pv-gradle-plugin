@@ -3,7 +3,6 @@ package su.plo.voice.plugin.entrypoint
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import su.plo.voice.plugin.AddonMeta
@@ -16,17 +15,17 @@ class FabricAddonEntryPoint(
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
-    override fun generate(project: Project, addons: List<AddonMeta>) {
+    override fun generate(outputDir: File, addons: List<AddonMeta>) {
         val serverClientAddons = addons.filter { it.loaderScope.isClient || it.loaderScope.isServer }
         if (serverClientAddons.isEmpty()) return
 
         val packageName = serverClientAddons[0].entryPoint.substringBeforeLast(".")
 
-        generateJavaFile(project, packageName, serverClientAddons)
-        generateMetaFile(project, packageName, serverClientAddons)
+        generateJavaFile(outputDir, packageName, serverClientAddons)
+        generateMetaFile(outputDir, packageName, serverClientAddons)
     }
 
-    override fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val addon = addons[0]
 
         val fabricJson = JsonObject()
@@ -62,8 +61,8 @@ class FabricAddonEntryPoint(
         }
 
         val resourcesDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/resources"
+            outputDir,
+            "resources"
         ).also { it.mkdirs() }
 
         File(
@@ -72,7 +71,7 @@ class FabricAddonEntryPoint(
         ).writeText(gson.toJson(fabricJson))
     }
 
-    override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         // Define class
         val className = "FabricEntryPoint"
         val fullClassName = "${packageName.replace(".", "/")}/$className"
@@ -106,8 +105,8 @@ class FabricAddonEntryPoint(
         cw.visitEnd()
 
         val packageDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
+            outputDir,
+            "classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(

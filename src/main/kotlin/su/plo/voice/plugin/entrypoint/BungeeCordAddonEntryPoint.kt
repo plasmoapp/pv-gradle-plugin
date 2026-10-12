@@ -1,6 +1,5 @@
 package su.plo.voice.plugin.entrypoint
 
-import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
@@ -13,17 +12,17 @@ class BungeeCordAddonEntryPoint(
     private val minPlasmoVoiceVersion: String?,
 ) : AddonEntryPoint() {
 
-    override fun generate(project: Project, addons: List<AddonMeta>) {
+    override fun generate(outputDir: File, addons: List<AddonMeta>) {
         val proxyAddons = addons.filter { it.loaderScope.isProxy }
         if (proxyAddons.isEmpty()) return
         
         val packageName = proxyAddons[0].entryPoint.substringBeforeLast(".")
 
-        generateJavaFile(project, packageName, proxyAddons)
-        generateMetaFile(project, packageName, proxyAddons)
+        generateJavaFile(outputDir, packageName, proxyAddons)
+        generateMetaFile(outputDir, packageName, proxyAddons)
     }
 
-    override fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val addon = addons[0]
 
         val pluginYml: MutableMap<String, Any> = HashMap()
@@ -40,8 +39,8 @@ class BungeeCordAddonEntryPoint(
         }
 
         val resourcesDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/resources"
+            outputDir,
+            "resources"
         ).also { it.mkdirs() }
 
         File(
@@ -50,7 +49,7 @@ class BungeeCordAddonEntryPoint(
         ).writeText(Yaml().dump(pluginYml))
     }
 
-    override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         // Define class
         val className = "BungeeCordEntryPoint"
         val fullClassName = "${packageName.replace(".", "/")}/$className"
@@ -91,8 +90,8 @@ class BungeeCordAddonEntryPoint(
         cw.visitEnd()
 
         val packageDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
+            outputDir,
+            "classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(
@@ -100,7 +99,7 @@ class BungeeCordAddonEntryPoint(
             "${className}.class"
         ).writeBytes(cw.toByteArray())
 
-        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(project, packageName.replace(".", "/"))
+        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(outputDir, packageName.replace(".", "/"))
     }
 
     private fun generatePlasmoVoiceVersionCheck(method: MethodVisitor, className: String, logUnsupported: Boolean) {

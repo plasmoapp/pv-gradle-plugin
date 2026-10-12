@@ -4,7 +4,6 @@ import com.google.common.base.CaseFormat
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import su.plo.voice.plugin.AddonMeta
@@ -15,17 +14,17 @@ object MinestomAddonEntryPoint : AddonEntryPoint() {
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
 
-    override fun generate(project: Project, addons: List<AddonMeta>) {
+    override fun generate(outputDir: File, addons: List<AddonMeta>) {
         val serverAddons = addons.filter { it.loaderScope.isServer }
         if (serverAddons.isEmpty()) return
 
         val packageName = serverAddons[0].entryPoint.substringBeforeLast(".")
 
-        generateJavaFile(project, packageName, serverAddons)
-        generateMetaFile(project, packageName, serverAddons)
+        generateJavaFile(outputDir, packageName, serverAddons)
+        generateMetaFile(outputDir, packageName, serverAddons)
     }
 
-    override fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val addon = addons[0]
 
         val fabricJson = JsonObject()
@@ -41,8 +40,8 @@ object MinestomAddonEntryPoint : AddonEntryPoint() {
         })
 
         val resourcesDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/resources"
+            outputDir,
+            "resources"
         ).also { it.mkdirs() }
 
         File(
@@ -51,7 +50,7 @@ object MinestomAddonEntryPoint : AddonEntryPoint() {
         ).writeText(gson.toJson(fabricJson))
     }
 
-    override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         // Define class
         val className = "MinestomEntryPoint"
         val fullClassName = "${packageName.replace(".", "/")}/$className"
@@ -90,8 +89,8 @@ object MinestomAddonEntryPoint : AddonEntryPoint() {
         cw.visitEnd()
 
         val packageDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/classes/${packageName.replace(".", "/")}"
+            outputDir,
+            "classes/${packageName.replace(".", "/")}"
         ).also { it.mkdirs() }
 
         File(

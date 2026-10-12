@@ -1,52 +1,57 @@
 package su.plo.voice.plugin
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import su.plo.voice.plugin.entrypoint.AddonEntryPoint
 import su.plo.voice.plugin.util.parseAddonMeta
-import java.io.File
 
-//@CacheableTask
-open class GenerateLoadersEntryPointsTask : DefaultTask() {
+@CacheableTask
+abstract class GenerateLoadersEntryPointsTask : DefaultTask() {
 
-//    init {
-//        val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
-//        val mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-//
-//        inputs.files(mainSourceSet.java.sourceDirectories.asFileTree)
-//        outputs.files(File(project.layout.buildDirectory.get().asFile, CACHE_FILE_PATH))
-//        outputs.cacheIf { true }
-//    }
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sources: ConfigurableFileCollection
+
+    @get:Input
+    abstract val paperPlugin: Property<Boolean>
+
+    @get:Input
+    abstract val paperOpenClassloader: Property<Boolean>
+
+    @get:Input
+    @get:Optional
+    abstract val minPlasmoVoiceVersion: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
 
     @TaskAction
     fun action() {
-        val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
-        val mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-
-        val kotlinMainSourceSet = project.kotlinExtension.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-
-        val sourceFiles = HashSet(mainSourceSet.java.sourceDirectories.asFileTree.files)
-            .plus(kotlinMainSourceSet.kotlin.sourceDirectories.asFileTree.files)
+        val outputDir = outputDir.get().asFile
 
         // entrypoints of a platform that is no longer generated would stay in the jar otherwise
-        File(project.layout.buildDirectory.get().asFile, GENERATED_PATH).deleteRecursively()
+        outputDir.deleteRecursively()
 
+        val sourceFiles = sources.asFileTree.files
         val addons = sourceFiles.mapNotNull { it.parseAddonMeta(sourceFiles) }
         if (addons.isEmpty()) return
 
-        val extension = project.extensions.getByType(EntryPointsExtension::class.java)
-
-        AddonEntryPoint.processAddons(project, addons, extension)
-//        File(project.layout.buildDirectory.get().asFile, CACHE_FILE_PATH).writeText("")
-    }
-
-    companion object {
-
-        private const val GENERATED_PATH = "generated/sources/plasmovoice"
-
-        private const val CACHE_FILE_PATH = "generated/sources/plasmovoice/.cache"
+        AddonEntryPoint.processAddons(
+            outputDir,
+            addons,
+            paperPlugin.get(),
+            paperOpenClassloader.get(),
+            minPlasmoVoiceVersion.orNull,
+        )
     }
 }

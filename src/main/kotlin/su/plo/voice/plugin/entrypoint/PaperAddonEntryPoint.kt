@@ -1,6 +1,5 @@
 package su.plo.voice.plugin.entrypoint
 
-import org.gradle.api.Project
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.yaml.snakeyaml.DumperOptions
@@ -14,17 +13,17 @@ class PaperAddonEntryPoint(
     minPlasmoVoiceVersion: String?
 ) : BukkitBasedAddonEntryPoint(minPlasmoVoiceVersion) {
 
-    override fun generate(project: Project, addons: List<AddonMeta>) {
+    override fun generate(outputDir: File, addons: List<AddonMeta>) {
         val serverAddons = addons.filter { it.loaderScope.isServer }
         if (serverAddons.isEmpty()) return
 
         val packageName = serverAddons[0].entryPoint.substringBeforeLast(".")
 
-        generateJavaFile(project, packageName, serverAddons)
-        generateMetaFile(project, packageName, serverAddons)
+        generateJavaFile(outputDir, packageName, serverAddons)
+        generateMetaFile(outputDir, packageName, serverAddons)
     }
 
-    override fun generateMetaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateMetaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val addon = addons[0]
 
         val pluginYml: MutableMap<String, Any> = LinkedHashMap()
@@ -45,8 +44,8 @@ class PaperAddonEntryPoint(
         )
 
         val resourcesDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/resources"
+            outputDir,
+            "resources"
         ).also { it.mkdirs() }
 
         val dumperOptions = DumperOptions().also {
@@ -59,12 +58,12 @@ class PaperAddonEntryPoint(
         ).writeText(Yaml(dumperOptions).dump(pluginYml))
     }
 
-    override fun generateJavaFile(project: Project, packageName: String, addons: List<AddonMeta>) {
+    override fun generateJavaFile(outputDir: File, packageName: String, addons: List<AddonMeta>) {
         val packagePath = packageName.replace(".", "/")
 
         val packageDir = File(
-            project.layout.buildDirectory.get().asFile,
-            "generated/sources/plasmovoice/classes/$packagePath"
+            outputDir,
+            "classes/$packagePath"
         ).also { it.mkdirs() }
 
         File(packageDir, "${BOOTSTRAP_CLASS_NAME}.class")
@@ -72,7 +71,7 @@ class PaperAddonEntryPoint(
         File(packageDir, "${PLUGIN_CLASS_NAME}.class")
             .writeBytes(generatePluginClass(packagePath, addons))
 
-        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(project, packagePath)
+        if (minPlasmoVoiceVersion != null) writeVersionCheckClass(outputDir, packagePath)
     }
 
     private fun generateBootstrapClass(packagePath: String, addons: List<AddonMeta>): ByteArray {
